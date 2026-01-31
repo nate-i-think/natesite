@@ -1,0 +1,502 @@
+@font-face {
+  font-family: 'BigBlueTerm';
+  src: url('/fonts/BigBlueTerm437NerdFontMono-Regular.ttf') format('truetype');
+}
+
+/* ===========================================
+   CRT PHOSPHOR COLORS - realistic amber CRT hue shift
+   Format: R, G, B (0-255 each)
+
+   Real phosphors shift color as they bloom:
+   - Core:  bright yellow/white (hottest part of the glow)
+   - Mid:   the main amber color (what you "read")
+   - Edge:  darker red/orange (outer bloom, fades to black)
+   =========================================== */
+:root {
+  --crt-core: 255, 225, 120;   /* bright yellow - center of characters */
+  --crt-mid:  255, 156, 0;     /* amber - main text color */
+  --crt-edge: 180, 60, 0;      /* dark red-orange - outer glow */
+  --vignette-strength: 0.5;
+  --vignette-radius: 60%;
+}
+
+/* Reduced vignette on mobile */
+@media (max-width: 900px) {
+  :root {
+    --vignette-strength: 0.5;
+    --vignette-radius: 70%;
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: rgb(35, 8, 8);
+  color: rgb(var(--crt-core));  /* bright core color for text itself */
+  font-family: 'BigBlueTerm', monospace;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.terminal {
+  padding: 40px;
+  min-height: 100vh;
+  position: relative;
+  /* PHOSPHOR GLOW - text is bright core, shadows shift outward
+     Text itself: --crt-core (bright, set in body color)
+     Layer 1-2: --crt-mid (amber glow right around text)
+     Layer 3-6: --crt-edge (red-orange outer bloom) */
+  text-shadow:
+    0 0 2px rgb(var(--crt-mid)),            /* amber tight */
+    0 0 8px rgba(var(--crt-mid), 0.9),      /* amber spread */
+    0 0 20px rgba(var(--crt-mid), 0.6),     /* amber fade */
+    0 0 35px rgba(var(--crt-edge), 0.9),    /* red inner */
+    0 0 60px rgba(var(--crt-edge), 0.7),    /* red mid */
+    0 0 100px rgba(var(--crt-edge), 0.5),   /* red outer */
+    0 0 150px rgba(var(--crt-edge), 0.3);   /* red far bloom */
+}
+
+/* NOISE DITHER - breaks up color banding from layered glows */
+.terminal::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('/assets/img/noise.png');
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* SCANLINES - soft horizontal lines overlay
+   Uses repeating gradient with soft edges (not hard rectangles)
+   - 4px total height per scanline cycle
+   - Peak darkness at 2px (center of dark band)
+   - Gradient fades: transparent -> dark -> transparent */
+.terminal::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0) 0px,     /* start transparent */
+    rgba(0, 0, 0, 0.03) 1px,  /* fade in */
+    rgba(0, 0, 0, 0.12) 2px,  /* peak darkness - increase for stronger lines */
+    rgba(0, 0, 0, 0.03) 3px,  /* fade out */
+    rgba(0, 0, 0, 0) 4px      /* end transparent - change to adjust line spacing */
+  );
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* VIGNETTE - darkens edges like a curved CRT screen */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: radial-gradient(
+    circle,
+    transparent var(--vignette-radius),
+    rgb(0 0 0 / var(--vignette-strength)) 100%
+  );
+}
+
+
+/* BLINKING CURSOR - matches text glow */
+.cursor {
+  display: inline-block;
+  width: 0.8em;   /* cursor width */
+  height: 1.2em; /* cursor height */
+  background-color: rgb(var(--crt-core));
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite; /* 1s = blink speed */
+  /* Glow matching text phosphor effect */
+  box-shadow:
+    0 0 2px rgb(var(--crt-mid)),
+    0 0 8px rgba(var(--crt-mid), 0.9),
+    0 0 20px rgba(var(--crt-mid), 0.6),
+    0 0 35px rgba(var(--crt-edge), 0.9),
+    0 0 60px rgba(var(--crt-edge), 0.7),
+    0 0 100px rgba(var(--crt-edge), 0.5),
+    0 0 150px rgba(var(--crt-edge), 0.3);
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Scanline artifact drift - continuous downward flow */
+@keyframes scanline-drift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 300px;
+  }
+}
+
+/* ACCESSIBILITY - disable animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .cursor {
+    animation: none;
+  }
+  .lightbox,
+  .lightbox img {
+    transition: none;
+  }
+  .about-image::before {
+    animation: none;
+  }
+  /* CRT reveal: skip all animations */
+  .crt-image {
+    opacity: 1;
+    visibility: visible;
+  }
+  .crt-reveal-wrapper {
+    animation: none;
+  }
+  .crt-reveal-wrapper .crt-image {
+    clip-path: none;
+    animation: none;
+  }
+  .crt-reveal-wrapper::after {
+    display: none;
+  }
+}
+
+a {
+  color: rgb(var(--crt-core));
+}
+
+a:hover {
+  color: #ffffff;
+}
+
+h1, h2, h3 {
+  font-weight: normal;
+  margin-bottom: 0.15em;
+}
+
+h1 {
+  font-size: 3.7em;  /* ~52px, bumped up from ~48px */
+}
+
+h2 {
+  font-size: 2.1em;  /* ~29px, bumped down from ~36px */
+}
+
+h2, h3 {
+  margin-top: 0.6em;
+}
+
+p {
+  margin-bottom: 1em;
+  margin-left: 1.5em;
+}
+
+hr {
+  border: none;
+  height: 2px;
+  background-color: rgb(var(--crt-core));
+  margin: 1.5em 0;
+  box-shadow:
+    0 0 4px rgb(var(--crt-mid)),
+    0 0 12px rgba(var(--crt-mid), 1),
+    0 0 25px rgba(var(--crt-mid), 0.8),
+    0 0 40px rgba(var(--crt-edge), 0.9),
+    0 0 70px rgba(var(--crt-edge), 0.7),
+    0 0 110px rgba(var(--crt-edge), 0.5),
+    0 0 160px rgba(var(--crt-edge), 0.3);
+  /* Hidden by default, revealed by typewriter JS */
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+/* Show hr immediately when reduced motion or no JS */
+@media (prefers-reduced-motion: reduce) {
+  hr {
+    opacity: 1;
+  }
+}
+
+/* CRT IMAGE - amber monochrome with posterization and bloom
+   Uses SVG filter defined in default.html for GPU-accelerated processing */
+.crt-image {
+  filter: url(#crt-image-filter) drop-shadow(0 0 4px rgba(var(--crt-mid), 0.4))
+                                 drop-shadow(0 0 12px rgba(var(--crt-mid), 0.25))
+                                 drop-shadow(0 0 25px rgba(var(--crt-edge), 0.2));
+  max-width: 50%;
+  height: auto;
+  display: block;
+  margin: 1em 0;
+  cursor: pointer;
+}
+
+/* CRT SCANLINE REVEAL - electron gun sweep effect */
+.crt-image {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.crt-image.crt-revealed,
+.crt-image.crt-revealing {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Wrapper for scanline + glow effects */
+.crt-reveal-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.crt-reveal-wrapper .crt-image {
+  clip-path: inset(0 0 100% 0);
+}
+
+/* Reveal animation */
+.crt-reveal-wrapper.crt-revealing .crt-image {
+  animation: crt-reveal 0.4s linear forwards;
+}
+
+.crt-reveal-wrapper.crt-settling .crt-image,
+.crt-reveal-wrapper.crt-revealed .crt-image {
+  clip-path: inset(0 0 0 0);
+}
+
+@keyframes crt-reveal {
+  0%   { clip-path: inset(0 0 100% 0); }
+  100% { clip-path: inset(0 0 0 0); }
+}
+
+/* Leading edge scanline glow */
+.crt-reveal-wrapper::after {
+  --scanline-opacity: 0.5;  /* Adjust scanline brightness */
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+  top: 0;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(var(--crt-mid), 0.4) 30%,
+    rgba(var(--crt-mid), 0.7) 50%,
+    rgba(var(--crt-mid), 0.4) 70%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 8px rgba(var(--crt-mid), 0.5),
+    0 0 20px rgba(var(--crt-edge), 0.4),
+    0 0 40px rgba(var(--crt-edge), 0.3);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+  /* Feather left/right edges to match image's soft glow */
+  mask: linear-gradient(90deg, transparent 0%, black 15%, black 85%, transparent 100%);
+  -webkit-mask: linear-gradient(90deg, transparent 0%, black 15%, black 85%, transparent 100%);
+}
+
+.crt-reveal-wrapper.crt-revealing {
+  animation: crt-brightness-fade 3s cubic-bezier(0.4, 0.1, 0.2, 1) forwards;
+}
+
+@keyframes crt-brightness-fade {
+  0%   { filter: brightness(1.5); }
+  100% { filter: brightness(1); }
+}
+
+.crt-reveal-wrapper.crt-revealing::after {
+  opacity: 1;
+  animation: crt-scanline-move 0.4s linear forwards;
+}
+
+@keyframes crt-scanline-move {
+  0%   { top: 0%; opacity: 0; }
+  25%  { top: 25%; opacity: 1; }
+  90%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+
+/* Two-column about layout */
+.about-layout {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 3em;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.about-text {
+  flex: 0 1 500px;
+}
+
+.about-image {
+  flex: 0 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated scanline artifact - drifts down over the image */
+.about-image::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0px,
+    transparent 6px,
+    rgba(var(--crt-mid), 0.06) 8px,
+    rgba(var(--crt-core), 0.09) 12px,
+    rgba(var(--crt-core), 0.09) 24px,
+    rgba(var(--crt-mid), 0.06) 28px,
+    transparent 30px,
+    transparent 300px
+  );
+  background-size: 100% 300px;
+  animation: scanline-drift 12s linear infinite;
+  /* Feather edges to match the image's soft glow */
+  mask: radial-gradient(
+    ellipse 38% 38% at center,
+    black 40%,
+    transparent 100%
+  );
+  -webkit-mask: radial-gradient(
+    ellipse 38% 38% at center,
+    black 40%,
+    transparent 100%
+  );
+  /* Hide until image scan-in completes */
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+}
+
+/* Show drifting scanline after image scan completes */
+.about-image:has(.crt-scan-complete)::before,
+.about-image:has(.crt-revealed)::before {
+  opacity: 1;
+}
+
+.profile-image {
+  width: 525px;
+  max-width: none;
+  margin: 0;
+}
+
+/* Fixed profile image on wide desktop screens */
+@media (min-width: 1100px) {
+  .about-layout {
+    justify-content: flex-start;
+  }
+
+  .about-image {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+  }
+}
+
+@media (max-width: 900px) {
+  h1 {
+    font-size: 2.5em;
+    text-align: center;
+  }
+
+  h2 {
+    font-size: 1.6em;
+  }
+
+  .about-layout {
+    flex-direction: column-reverse;
+    align-items: center;
+  }
+
+  .about-text {
+    max-width: 500px;
+  }
+
+  .profile-image {
+    width: 100%;
+    max-width: 400px;
+  }
+}
+
+/* LIGHTBOX - fullscreen image viewer */
+.lightbox {
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 2000;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.lightbox.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.lightbox img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  cursor: default;
+  box-shadow:
+    0 0 30px rgba(0, 0, 0, 0.9),
+    0 0 80px rgba(0, 0, 0, 0.7);
+  border-radius: 4px;
+  transform: scale(0.85);
+  transition: transform 0.3s ease;
+}
+
+.lightbox.active img {
+  transform: scale(1);
+}
+
+/* Mobile lightbox adjustments */
+@media (max-width: 600px) {
+  .lightbox img {
+    max-width: 95%;
+    max-height: 85%;
+  }
+}

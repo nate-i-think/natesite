@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<!-- 
+why are you inspect elementing my personal webpage? there's nothing interesting here.
+
+or is there?!
+
+no really, there isn't. go do something more useful with your time! text a friend with
+whom you haven't spoken in a while. or call someone you love. or build something cool.
+or go touch grass!
+-->
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page.title | default: site.title }}</title>
+  <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+  <noscript>
+    <style>
+      .crt-image { opacity: 1 !important; visibility: visible !important; }
+      hr { opacity: 1 !important; }
+    </style>
+  </noscript>
+</head>
+<body>
+  <!-- SVG FILTER FOR CRT IMAGES
+       Color palette (matches CSS variables):
+       - Core:  255, 225, 120  (bright yellow - brightest parts)
+       - Mid:   255, 176, 0    (amber)
+       - Edge:  180, 60, 0     (red-orange - outer bloom)
+  -->
+  <svg style="position: absolute; width: 0; height: 0;" aria-hidden="true">
+    <defs>
+      <filter id="crt-image-filter" color-interpolation-filters="sRGB">
+        <!-- Step 1: Convert to grayscale luminance, tint to core yellow (255, 225, 120) -->
+        <feColorMatrix type="matrix" values="
+          0.2126  0.7152  0.0722  0  0
+          0.1875  0.6308  0.0637  0  0
+          0.1000  0.3366  0.0340  0  0
+          0       0       0       1  0
+        " result="core"/>
+
+        <!-- Step 2: Posterize to 10 tones using discrete transfer -->
+        <feComponentTransfer in="core" result="posterized">
+          <feFuncR type="discrete" tableValues="0 0.11 0.22 0.33 0.44 0.55 0.66 0.77 0.88 1"/>
+          <feFuncG type="discrete" tableValues="0 0.11 0.22 0.33 0.44 0.55 0.66 0.77 0.88 1"/>
+          <feFuncB type="discrete" tableValues="0 0.11 0.22 0.33 0.44 0.55 0.66 0.77 0.88 1"/>
+        </feComponentTransfer>
+
+        <!-- Step 3: Create bloom (blurred glow layer) -->
+        <feGaussianBlur in="posterized" stdDeviation="6" result="bloom"/>
+
+        <!-- Step 4: Shift bloom color toward red-orange (180, 60, 0) for subsurface scattering -->
+        <feColorMatrix in="bloom" type="matrix" values="
+          0.75  0     0     0  0
+          0     0.27  0     0  0
+          0     0     0     0  0
+          0     0     0     1  0
+        " result="redbloom"/>
+
+        <!-- Step 5: Boost the red bloom brightness -->
+        <feComponentTransfer in="redbloom" result="brightbloom">
+          <feFuncR type="linear" slope="1.8" intercept="0"/>
+          <feFuncG type="linear" slope="1.8" intercept="0"/>
+          <feFuncB type="linear" slope="1.8" intercept="0"/>
+        </feComponentTransfer>
+
+        <!-- Step 6: Composite bloom behind original -->
+        <feBlend in="posterized" in2="brightbloom" mode="screen" result="combined"/>
+
+        <!-- Step 7: Feather edges - blur alpha then remap so edges become transparent -->
+        <!-- stdDeviation = blur amount, slope/intercept = how aggressively edges are cut -->
+        <!-- Higher slope + more negative intercept = more feathering on straight edges -->
+        <feGaussianBlur in="SourceAlpha" stdDeviation="20" result="blurredAlpha"/>
+        <feComponentTransfer in="blurredAlpha" result="softAlpha">
+          <feFuncA type="linear" slope="20" intercept="-18"/>
+        </feComponentTransfer>
+        <feComposite in="combined" in2="softAlpha" operator="in"/>
+      </filter>
+    </defs>
+  </svg>
+
+  <div class="terminal">
+    {{ content }}
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox">
+    <img src="" alt="Full size image" id="lightbox-img">
+  </div>
+
+  <script>
+  // TYPEWRITER - waits for images to reveal first
+  (function() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var terminal = document.querySelector('.terminal');
+
+    // Lock terminal dimensions to prevent layout shift as text types in
+    terminal.style.minWidth = terminal.offsetWidth + 'px';
+    terminal.style.minHeight = terminal.offsetHeight + 'px';
+
+    // Also lock any flex children that contain text
+    var aboutText = terminal.querySelector('.about-text');
+    if (aboutText) {
+      aboutText.style.width = aboutText.offsetWidth + 'px';
+    }
+
+    var nodes = [];  // Mixed array of text nodes and HR elements
+
+    function collectNodes(node) {
+      // Skip script and style elements entirely
+      if (node.nodeName === 'SCRIPT' || node.nodeName === 'STYLE' || node.nodeName === 'NOSCRIPT') {
+        return;
+      }
+      if (node.nodeType === 3 && node.textContent.trim()) {
+        // Text node
+        nodes.push({ type: 'text', node: node, text: node.textContent });
+        node.textContent = '';
+      } else if (node.nodeName === 'HR') {
+        // HR element (hidden by CSS, revealed when typewriter reaches it)
+        nodes.push({ type: 'hr', node: node });
+      } else {
+        for (var i = 0; i < node.childNodes.length; i++) {
+          collectNodes(node.childNodes[i]);
+        }
+      }
+    }
+
+    collectNodes(terminal);
+
+    var nodeIndex = 0;
+    var charIndex = 0;
+    var cursor = document.createElement('span');
+    cursor.className = 'cursor';
+    var done = false;
+    var started = false;
+
+    function positionCursor() {
+      // Find current text node for cursor positioning
+      for (var i = nodeIndex; i < nodes.length; i++) {
+        if (nodes[i].type === 'text') {
+          nodes[i].node.parentNode.insertBefore(cursor, nodes[i].node.nextSibling);
+          return;
+        }
+      }
+      // If no more text nodes, position after last text node
+      for (var i = nodes.length - 1; i >= 0; i--) {
+        if (nodes[i].type === 'text') {
+          nodes[i].node.parentNode.insertBefore(cursor, nodes[i].node.nextSibling);
+          return;
+        }
+      }
+    }
+
+    function complete() {
+      if (done) return;
+      done = true;
+      for (var i = nodeIndex; i < nodes.length; i++) {
+        if (nodes[i].type === 'text') {
+          nodes[i].node.textContent = nodes[i].text;
+        } else if (nodes[i].type === 'hr') {
+          nodes[i].node.style.opacity = '1';
+        }
+      }
+      // Place cursor after the last text node
+      for (var i = nodes.length - 1; i >= 0; i--) {
+        if (nodes[i].type === 'text') {
+          nodes[i].node.parentNode.insertBefore(cursor, nodes[i].node.nextSibling);
+          break;
+        }
+      }
+      // Release dimension lock for responsive behavior
+      terminal.style.minWidth = '';
+      terminal.style.minHeight = '';
+      if (aboutText) {
+        aboutText.style.width = '';
+      }
+    }
+
+    function tick() {
+      if (done) return;
+      for (var i = 0; i < 7; i++) {
+        if (nodeIndex >= nodes.length) {
+          complete();
+          return;
+        }
+        var current = nodes[nodeIndex];
+        if (current.type === 'hr') {
+          // Reveal HR and move to next node
+          current.node.style.opacity = '1';
+          nodeIndex++;
+          charIndex = 0;
+          i--; // Don't count HR toward character limit
+        } else if (current.type === 'text') {
+          // Instantly reveal very short text nodes (avoids pauses on markup fragments)
+          if (current.text.length <= 3) {
+            current.node.textContent = current.text;
+            nodeIndex++;
+            charIndex = 0;
+            i--; // Don't count short nodes toward character limit
+          } else {
+            current.node.textContent += current.text[charIndex];
+            charIndex++;
+            if (charIndex >= current.text.length) {
+              nodeIndex++;
+              charIndex = 0;
+            }
+          }
+        }
+      }
+      positionCursor();
+      requestAnimationFrame(tick);
+    }
+
+    function startTypewriter() {
+      if (started) return;
+      started = true;
+      document.addEventListener('click', complete);
+      document.addEventListener('keydown', complete);
+      positionCursor();
+      requestAnimationFrame(tick);
+    }
+
+    // Wait for images to reveal before starting typewriter
+    document.addEventListener('imagesRevealed', startTypewriter, { once: true });
+  })();
+
+  // LIGHTBOX - click CRT images to view full color version
+  (function() {
+    var lightbox = document.getElementById('lightbox');
+    var lightboxImg = document.getElementById('lightbox-img');
+    var crtImages = document.querySelectorAll('.crt-image');
+
+    crtImages.forEach(function(img) {
+      img.addEventListener('click', function(e) {
+        e.stopPropagation();
+        // Use full-res version if available, otherwise use src
+        lightboxImg.src = this.dataset.fullSrc || this.src;
+        lightboxImg.alt = this.alt;
+        document.body.style.overflow = 'hidden';
+        // Delay adding active class so browser can paint initial state first
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            lightbox.classList.add('active');
+          });
+        });
+      });
+    });
+
+    lightbox.addEventListener('click', function(e) {
+      if (e.target === lightbox) {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+  })();
+
+  // CRT SCANLINE REVEAL - electron gun sweep effect (starts immediately, then triggers typewriter)
+  (function() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll('.crt-image').forEach(function(img) {
+        img.classList.add('crt-revealed');
+      });
+      document.dispatchEvent(new CustomEvent('imagesRevealed'));
+      return;
+    }
+
+    var crtImages = document.querySelectorAll('.crt-image');
+    var staggerDelay = 150;
+    var revealedCount = 0;
+    var totalImages = crtImages.length;
+
+    // If no images, trigger typewriter immediately
+    if (totalImages === 0) {
+      document.dispatchEvent(new CustomEvent('imagesRevealed'));
+      return;
+    }
+
+    crtImages.forEach(function(img, index) {
+      var wrapper = document.createElement('div');
+      wrapper.className = 'crt-reveal-wrapper';
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+
+      function startReveal() {
+        setTimeout(function() {
+          wrapper.classList.add('crt-revealing');
+          img.classList.add('crt-revealing');
+
+          // After scan completes (0.4s), mark scan done and notify
+          setTimeout(function() {
+            wrapper.classList.add('crt-scan-complete');
+            revealedCount++;
+            if (revealedCount === totalImages) {
+              document.dispatchEvent(new CustomEvent('imagesRevealed'));
+            }
+          }, 400);
+
+          // After brightness fade completes (3s), switch to final state
+          setTimeout(function() {
+            wrapper.classList.remove('crt-revealing');
+            wrapper.classList.add('crt-revealed');
+            img.classList.remove('crt-revealing');
+            img.classList.add('crt-revealed');
+          }, 3000);
+        }, index * staggerDelay);
+      }
+
+      if (img.complete && img.naturalHeight !== 0) {
+        startReveal();
+      } else {
+        img.addEventListener('load', startReveal);
+        img.addEventListener('error', function() {
+          img.classList.add('crt-revealed');
+          wrapper.classList.add('crt-revealed');
+          revealedCount++;
+          if (revealedCount === totalImages) {
+            document.dispatchEvent(new CustomEvent('imagesRevealed'));
+          }
+        });
+      }
+    });
+  })();
+
+  // EXTERNAL LINKS - open in new tab
+  document.querySelectorAll('a[href^="http"]').forEach(function(link) {
+    link.setAttribute('target', '_blank');
+    link.setAttribute('rel', 'noopener noreferrer');
+  });
+  </script>
+</body>
+</html>

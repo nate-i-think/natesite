@@ -1,0 +1,7 @@
+title: Nathan Myers
+description: Personal website of Nathan Myers
+baseurl: ""
+url: ""
+
+# Build settings
+markdown: kramdown
