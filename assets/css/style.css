@@ -1,6 +1,7 @@
 @font-face {
   font-family: 'BigBlueTerm';
-  src: url('/fonts/BigBlueTerm437NerdFontMono-Regular.ttf') format('truetype');
+  src: url('/fonts/BigBlueTerm-subset.woff2') format('woff2');
+  font-display: block;
 }
 
 /* ===========================================
@@ -50,6 +51,25 @@ body {
   line-height: 1.4;
 }
 
+/* Hide text until typewriter is ready (JS adds .ready class) */
+.terminal:not(.ready),
+.terminal:not(.ready) a {
+  color: transparent;
+  text-shadow: none;
+}
+
+/* Reduced shadows during typewriter animation for performance */
+.terminal.typing {
+  text-shadow:
+    0 0 2px rgb(var(--crt-mid)),
+    0 0 8px rgba(var(--crt-mid), 0.9),
+    0 0 20px rgba(var(--crt-mid), 0.5),
+    0 0 35px rgba(var(--crt-edge), 0.9);    /* red inner */
+}
+.terminal.typing a {
+  text-shadow: inherit;
+}
+
 .terminal {
   padding: 40px;
   min-height: 100vh;
@@ -62,10 +82,7 @@ body {
     0 0 2px rgb(var(--crt-mid)),            /* amber tight */
     0 0 8px rgba(var(--crt-mid), 0.9),      /* amber spread */
     0 0 20px rgba(var(--crt-mid), 0.6),     /* amber fade */
-    0 0 35px rgba(var(--crt-edge), 0.9),    /* red inner */
-    0 0 60px rgba(var(--crt-edge), 0.7),    /* red mid */
-    0 0 100px rgba(var(--crt-edge), 0.5),   /* red outer */
-    0 0 150px rgba(var(--crt-edge), 0.3);   /* red far bloom */
+    0 0 35px rgba(var(--crt-edge), 0.9);    /* red inner */
 }
 
 /* NOISE DITHER - breaks up color banding from layered glows */
@@ -129,6 +146,9 @@ body::before {
   background-color: rgb(var(--crt-core));
   vertical-align: text-bottom;
   animation: blink 1s step-end infinite; /* 1s = blink speed */
+  /* Performance: force GPU layer for cursor */
+  transform: translateZ(0);
+  will-change: opacity;
   /* Glow matching text phosphor effect */
   box-shadow:
     0 0 2px rgb(var(--crt-mid)),
@@ -159,6 +179,10 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  /* Show text immediately (no typewriter) */
+  .terminal {
+    color: rgb(var(--crt-core));
   }
   .cursor {
     animation: none;

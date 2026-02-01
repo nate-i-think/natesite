@@ -16,11 +16,13 @@ or go touch grass!
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ page.title | default: site.title }}</title>
   <script>history.scrollRestoration = 'manual'; window.scrollTo(0, 0);</script>
+  <link rel="preload" href="/fonts/BigBlueTerm-subset.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
   <noscript>
     <style>
       .crt-image { opacity: 1 !important; visibility: visible !important; }
       hr { opacity: 1 !important; }
+      .terminal { color: rgb(255, 225, 120) !important; }
     </style>
   </noscript>
 </head>
@@ -92,140 +94,150 @@ or go touch grass!
   </div>
 
   <script>
-  // TYPEWRITER - waits for images to reveal first
+  // TYPEWRITER - waits for fonts AND images before starting
   (function() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    var terminal = document.querySelector('.terminal');
+    // Create promise for imagesRevealed event
+    var imagesRevealedPromise = new Promise(function(resolve) {
+      document.addEventListener('imagesRevealed', resolve, { once: true });
+    });
 
-    // Lock terminal dimensions to prevent layout shift as text types in
-    terminal.style.minWidth = terminal.offsetWidth + 'px';
-    terminal.style.minHeight = terminal.offsetHeight + 'px';
+    // Wait for BOTH fonts AND images before doing anything
+    Promise.all([document.fonts.ready, imagesRevealedPromise]).then(function() {
+      var terminal = document.querySelector('.terminal');
 
-    // Also lock any flex children that contain text
-    var aboutText = terminal.querySelector('.about-text');
-    if (aboutText) {
-      aboutText.style.width = aboutText.offsetWidth + 'px';
-    }
+      // Lock terminal dimensions to prevent layout shift as text types in
+      terminal.style.minWidth = terminal.offsetWidth + 'px';
+      terminal.style.minHeight = terminal.offsetHeight + 'px';
 
-    var nodes = [];  // Mixed array of text nodes and HR elements
-
-    function collectNodes(node) {
-      // Skip script and style elements entirely
-      if (node.nodeName === 'SCRIPT' || node.nodeName === 'STYLE' || node.nodeName === 'NOSCRIPT') {
-        return;
-      }
-      if (node.nodeType === 3 && node.textContent.trim()) {
-        // Text node
-        nodes.push({ type: 'text', node: node, text: node.textContent });
-        node.textContent = '';
-      } else if (node.nodeName === 'HR') {
-        // HR element (hidden by CSS, revealed when typewriter reaches it)
-        nodes.push({ type: 'hr', node: node });
-      } else {
-        for (var i = 0; i < node.childNodes.length; i++) {
-          collectNodes(node.childNodes[i]);
-        }
-      }
-    }
-
-    collectNodes(terminal);
-
-    var nodeIndex = 0;
-    var charIndex = 0;
-    var cursor = document.createElement('span');
-    cursor.className = 'cursor';
-    var done = false;
-    var started = false;
-
-    function positionCursor() {
-      // Find current text node for cursor positioning
-      for (var i = nodeIndex; i < nodes.length; i++) {
-        if (nodes[i].type === 'text') {
-          nodes[i].node.parentNode.insertBefore(cursor, nodes[i].node.nextSibling);
-          return;
-        }
-      }
-      // If no more text nodes, position after last text node
-      for (var i = nodes.length - 1; i >= 0; i--) {
-        if (nodes[i].type === 'text') {
-          nodes[i].node.parentNode.insertBefore(cursor, nodes[i].node.nextSibling);
-          return;
-        }
-      }
-    }
-
-    function complete() {
-      if (done) return;
-      done = true;
-      for (var i = nodeIndex; i < nodes.length; i++) {
-        if (nodes[i].type === 'text') {
-          nodes[i].node.textContent = nodes[i].text;
-        } else if (nodes[i].type === 'hr') {
-          nodes[i].node.style.opacity = '1';
-        }
-      }
-      // Place cursor after the last text node
-      for (var i = nodes.length - 1; i >= 0; i--) {
-        if (nodes[i].type === 'text') {
-          nodes[i].node.parentNode.insertBefore(cursor, nodes[i].node.nextSibling);
-          break;
-        }
-      }
-      // Release dimension lock for responsive behavior
-      terminal.style.minWidth = '';
-      terminal.style.minHeight = '';
+      // Also lock any flex children that contain text
+      var aboutText = terminal.querySelector('.about-text');
       if (aboutText) {
-        aboutText.style.width = '';
+        aboutText.style.width = aboutText.offsetWidth + 'px';
       }
-    }
 
-    function tick() {
-      if (done) return;
-      for (var i = 0; i < 7; i++) {
-        if (nodeIndex >= nodes.length) {
-          complete();
+      var nodes = [];  // Mixed array of text nodes and HR elements
+
+      function collectNodes(node) {
+        // Skip script and style elements entirely
+        if (node.nodeName === 'SCRIPT' || node.nodeName === 'STYLE' || node.nodeName === 'NOSCRIPT') {
           return;
         }
-        var current = nodes[nodeIndex];
-        if (current.type === 'hr') {
-          // Reveal HR and move to next node
-          current.node.style.opacity = '1';
-          nodeIndex++;
-          charIndex = 0;
-          i--; // Don't count HR toward character limit
-        } else if (current.type === 'text') {
-          // Instantly reveal very short text nodes (avoids pauses on markup fragments)
-          if (current.text.length <= 3) {
-            current.node.textContent = current.text;
-            nodeIndex++;
-            charIndex = 0;
-            i--; // Don't count short nodes toward character limit
-          } else {
-            current.node.textContent += current.text[charIndex];
-            charIndex++;
-            if (charIndex >= current.text.length) {
-              nodeIndex++;
-              charIndex = 0;
-            }
+        if (node.nodeType === 3 && node.textContent.trim()) {
+          // Text node
+          nodes.push({ type: 'text', node: node, text: node.textContent });
+          node.textContent = '';
+        } else if (node.nodeName === 'HR') {
+          // HR element (hidden by CSS, revealed when typewriter reaches it)
+          nodes.push({ type: 'hr', node: node });
+        } else {
+          for (var i = 0; i < node.childNodes.length; i++) {
+            collectNodes(node.childNodes[i]);
           }
         }
       }
-      positionCursor();
-      requestAnimationFrame(tick);
-    }
 
-    function startTypewriter() {
-      if (started) return;
-      started = true;
+      collectNodes(terminal);
+
+      var nodeIndex = 0;
+      var charIndex = 0;
+      var cursor = document.createElement('span');
+      cursor.className = 'cursor';
+      var done = false;
+      var frameCount = 0;
+
+      function positionCursor() {
+        // Find current text node for cursor positioning
+        for (var i = nodeIndex; i < nodes.length; i++) {
+          if (nodes[i].type === 'text') {
+            nodes[i].node.parentNode.insertBefore(cursor, nodes[i].node.nextSibling);
+            return;
+          }
+        }
+        // If no more text nodes, position after last text node
+        for (var i = nodes.length - 1; i >= 0; i--) {
+          if (nodes[i].type === 'text') {
+            nodes[i].node.parentNode.insertBefore(cursor, nodes[i].node.nextSibling);
+            return;
+          }
+        }
+      }
+
+      function complete() {
+        if (done) return;
+        done = true;
+        for (var i = nodeIndex; i < nodes.length; i++) {
+          if (nodes[i].type === 'text') {
+            nodes[i].node.textContent = nodes[i].text;
+          } else if (nodes[i].type === 'hr') {
+            nodes[i].node.style.opacity = '1';
+          }
+        }
+        // Place cursor after the last text node
+        for (var i = nodes.length - 1; i >= 0; i--) {
+          if (nodes[i].type === 'text') {
+            nodes[i].node.parentNode.insertBefore(cursor, nodes[i].node.nextSibling);
+            break;
+          }
+        }
+        // Release dimension lock for responsive behavior
+        terminal.style.minWidth = '';
+        terminal.style.minHeight = '';
+        if (aboutText) {
+          aboutText.style.width = '';
+        }
+        // Restore full phosphor bloom (CRT warm-up complete)
+        terminal.classList.remove('typing');
+      }
+
+      function tick() {
+        if (done) return;
+        for (var i = 0; i < 14; i++) {
+          if (nodeIndex >= nodes.length) {
+            complete();
+            return;
+          }
+          var current = nodes[nodeIndex];
+          if (current.type === 'hr') {
+            // Reveal HR and move to next node
+            current.node.style.opacity = '1';
+            nodeIndex++;
+            charIndex = 0;
+            i--; // Don't count HR toward character limit
+          } else if (current.type === 'text') {
+            // Instantly reveal very short text nodes (avoids pauses on markup fragments)
+            if (current.text.length <= 3) {
+              current.node.textContent = current.text;
+              nodeIndex++;
+              charIndex = 0;
+              i--; // Don't count short nodes toward character limit
+            } else {
+              current.node.textContent += current.text[charIndex];
+              charIndex++;
+              if (charIndex >= current.text.length) {
+                nodeIndex++;
+                charIndex = 0;
+              }
+            }
+          }
+        }
+        // Only reposition cursor every 3 frames to reduce layout thrashing
+        frameCount++;
+        if (frameCount % 3 === 0) {
+          positionCursor();
+        }
+        requestAnimationFrame(tick);
+      }
+
+      // Start immediately - we've already waited for fonts and images
+      terminal.classList.add('ready');
+      terminal.classList.add('typing');
       document.addEventListener('click', complete);
       document.addEventListener('keydown', complete);
       positionCursor();
       requestAnimationFrame(tick);
-    }
-
-    // Wait for images to reveal before starting typewriter
-    document.addEventListener('imagesRevealed', startTypewriter, { once: true });
+    });
   })();
 
   // LIGHTBOX - click CRT images to view full color version
