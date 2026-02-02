@@ -48,7 +48,7 @@ cooking up something very special with on of my best friends. stay tuned :)
 
 autodidacticism is a wonderful practice, because your curriculum is unbounded and your speed is self-determined.
 
-for those who build: curiosity, kindness, and the ability to lock the fuck in are the most important skills.
+for those who build: curiosity, kindness, and the ability to seriously lock in are the most important skills.
 
 working hard is hard. working hard on the right thing is so much harder. this is not just because it requires clear vantage over the problem space, but because it requires judgement. that judgement is <ins>taste</ins>.
 
