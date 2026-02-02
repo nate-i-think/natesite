@@ -96,7 +96,16 @@ or go touch grass!
   <script>
   // TYPEWRITER - waits for fonts AND images before starting
   (function() {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var isMobile = window.matchMedia('(max-width: 900px)').matches;
+    if (reducedMotion || isMobile) {
+      // Show text immediately, reveal HRs
+      document.querySelector('.terminal').classList.add('ready');
+      document.querySelectorAll('.terminal hr').forEach(function(hr) {
+        hr.style.opacity = '1';
+      });
+      return;
+    }
 
     // Create promise for imagesRevealed event
     var imagesRevealedPromise = new Promise(function(resolve) {
@@ -279,7 +288,9 @@ or go touch grass!
 
   // CRT SCANLINE REVEAL - electron gun sweep effect (starts immediately, then triggers typewriter)
   (function() {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var isMobile = window.matchMedia('(max-width: 900px)').matches;
+    if (reducedMotion || isMobile) {
       document.querySelectorAll('.crt-image').forEach(function(img) {
         img.classList.add('crt-revealed');
       });

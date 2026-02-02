@@ -435,6 +435,7 @@ hr {
   width: 525px;
   max-width: none;
   margin: 0;
+  aspect-ratio: 3 / 4;
 }
 
 /* Fixed profile image on wide desktop screens */
@@ -454,7 +455,7 @@ hr {
 
 @media (max-width: 900px) {
   h1 {
-    font-size: 2.5em;
+    font-size: 2.2em;
     text-align: center;
   }
 
