@@ -68,6 +68,8 @@ it's so easy to get caught up in speed and execution. slow, calm reflection, and
 
  \> [huxley marvit](https://www.huxley.sh/)
 
+ \> [rory shore](https://www.roryshore.com/)
+
  \> [kenzo salazar](https://www.linkedin.com/in/kenzosalazar/)
 
  \> [vy thejaswi](https://www.linkedin.com/in/vyshakh-thejaswi-848b51269/)
