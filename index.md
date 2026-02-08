@@ -25,7 +25,7 @@ six months ago i started a precision RTK GNSS hardware company. it turns out bui
 managing the electrical systems for a self-landing and thrust-vectoring rocket. also designed the C&DH for a cubesat going to space!
 
 ### - starting something new...
-cooking up something very special with on of my best friends. stay tuned :)
+cooking up something very special with one of my best friends. stay tuned :)
 
 ## links and contact
 
