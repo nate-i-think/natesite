@@ -64,9 +64,13 @@ it's so easy to get caught up in speed and execution. slow, calm reflection, and
 
  \> [zach plotkin](https://plotk.info/cv/)
 
- \> [jieruei chang](https://jierueichang.github.io/)
+ \> [jerry han](https://www.linkedin.com/in/jerry-han/)
+
+ \> [nick james](https://njames.xyz/)
 
  \> [huxley marvit](https://www.huxley.sh/)
+
+ \> [jieruei chang](https://jierueichang.github.io/)
 
  \> [rory shore](https://www.roryshore.com/)
 
@@ -74,9 +78,6 @@ it's so easy to get caught up in speed and execution. slow, calm reflection, and
 
  \> [vy thejaswi](https://www.linkedin.com/in/vyshakh-thejaswi-848b51269/)
 
- \> [jerry han](https://www.linkedin.com/in/jerry-han/)
-
- \> [nick james](https://www.linkedin.com/in/nick-james-25520027b/)
 
 </div>
 <div class="about-image">
