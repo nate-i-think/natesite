@@ -64,13 +64,13 @@ it's so easy to get caught up in speed and execution. slow, calm reflection, and
 
  \> [zach plotkin](https://plotk.info/cv/)
 
- \> [jerry han](https://www.linkedin.com/in/jerry-han/)
+ \> [jieruei chang](https://jierueichang.github.io/)
 
  \> [nick james](https://njames.xyz/)
 
- \> [huxley marvit](https://www.huxley.sh/)
+ \> [jerry han](https://www.linkedin.com/in/jerry-han/)
 
- \> [jieruei chang](https://jierueichang.github.io/)
+ \> [huxley marvit](https://www.huxley.sh/)
 
  \> [rory shore](https://www.roryshore.com/)
 
