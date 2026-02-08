@@ -58,7 +58,7 @@ it's so easy to get caught up in speed and execution. slow, calm reflection, and
 
 ## a few of my friends
 
- \> [emilka puchalski](https://www.linkedin.com/in/emilka-puchalski/)
+ \> [emilka puchalski](https://emilka.xyz/)
 
  \> [nicholas hagedorn](https://nicholashagedorn.com/)
 
