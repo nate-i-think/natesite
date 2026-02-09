@@ -42,7 +42,7 @@ cooking up something very special with one of my best friends. stay tuned :)
 
  \> [github](https://github.com/nate-i-think)
 
- \> [blog](https://tidbits.nathanmyers.co/)
+ \> [blog](https://tidbits.nathanmyers.co/?from=crt)
 
  \> [creative writing](https://stochasticdrift.com/)
 
