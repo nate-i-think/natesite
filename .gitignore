@@ -11,5 +11,8 @@ vendor/
 .DS_Store
 Thumbs.db
 
+# blog (separate repo)
+blog/
+
 # claude
 CLAUDE.md

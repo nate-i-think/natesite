@@ -42,6 +42,8 @@ cooking up something very special with one of my best friends. stay tuned :)
 
  \> [github](https://github.com/nate-i-think)
 
+ \> [blog](https://tidbits.nathanmyers.co/)
+
  \> [creative writing](https://stochasticdrift.com/)
 
 ## some thoughts
