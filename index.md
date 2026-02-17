@@ -8,7 +8,7 @@ title: Nathan Myers
 
 # Nathan Myers
 
-hi, i'm nathan. i build things i care deeply about with people i care deeply about.
+hi! i'm nathan. i build things i care deeply about with people i care deeply about.
 
 __________
 
