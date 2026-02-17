@@ -70,7 +70,7 @@ it's so easy to get caught up in speed and execution. slow, calm reflection, and
 
  \> [nick james](https://njames.xyz/)
 
- \> [jerry han](https://www.linkedin.com/in/jerry-han/)
+ \> [jerry han](https://jerryhan60.github.io/)
 
  \> [huxley marvit](https://www.huxley.sh/)
 
