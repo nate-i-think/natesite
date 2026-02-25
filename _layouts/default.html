@@ -18,6 +18,7 @@ or go touch grass!
   <script>history.scrollRestoration = 'manual'; window.scrollTo(0, 0);</script>
   <link rel="preload" href="/fonts/BigBlueTerm-subset.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+  <link rel="icon" type="image/png" href="/assets/img/favicon/frame-0.png">
   <noscript>
     <style>
       .crt-image { opacity: 1 !important; visibility: visible !important; }
@@ -353,6 +354,31 @@ or go touch grass!
         });
       }
     });
+  })();
+
+  // FAVICON TYPEWRITER - flashes N, A, T, H, A, N one at a time, then loops
+  (function() {
+    var count = 7;  // N, A, T, H, A, N, blank
+    var FRAME_MS = 1000;
+    var HOLD_MS  = 2000;
+    var link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel  = 'icon';
+      link.type = 'image/png';
+      document.head.appendChild(link);
+    }
+    var i = 0;
+    function step() {
+      link.href = '/assets/img/favicon/frame-' + i + '.png';
+      i++;
+      if (i < count) {
+        setTimeout(step, FRAME_MS);
+      } else {
+        setTimeout(function() { i = 0; step(); }, HOLD_MS);
+      }
+    }
+    step();
   })();
 
   // EXTERNAL LINKS - open in new tab
